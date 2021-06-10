@@ -54,7 +54,10 @@ class Seleccion : AppCompatActivity() {
                                         {
                                             if (response.code() == 200)
                                             {
+
                                                 Toast.makeText(applicationContext,response.body().toString(),Toast.LENGTH_LONG).show()
+                                                val intent = Intent(this@Seleccion,Navegador::class.java)
+                                                startActivity(intent)
                                             }
                                             else {
                                                 val message = response.errorBody()!!.string()
