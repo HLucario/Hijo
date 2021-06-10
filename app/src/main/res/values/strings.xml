@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Hijo</string>
+    <string name="e_iniciar">Iniciar Sesión</string>
+    <string name="e_correo">Correo electrónico</string>
+    <string name="e_contra">Contraseña</string>
+    <string name="e_selección">Selecciona el hijo a monitorear en este dispositivo</string>
+    <string name="b_aceptar">Aceptar</string>
+</resources>
