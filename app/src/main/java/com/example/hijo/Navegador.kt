@@ -3,12 +3,21 @@ package com.example.hijo
 import android.graphics.Bitmap
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
+import android.view.View
 import android.webkit.*
+import android.widget.Button
 import android.widget.SearchView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.*
 
 class Navegador : AppCompatActivity() {
-    private val BASE_URL="hhtps://google.com"
+    private val BASE_URL="https://google.com"
     private val SEARCH_PATH = "/search?q="
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +74,27 @@ class Navegador : AppCompatActivity() {
             }
 
         }
+        val btnS=findViewById<Button>(R.id.btnS)
+        //val filePath=Environment.getExternalStorageDirectory().toString()+"/Download/"+Calendar.getInstance().time.toString()+".jpg"
+
+        //val fileScreenshot=File(filePath)
+        //Log.d("RUTA:",fileScreenshot.toString())
+        //lateinit var fileOutputStream: FileOutputStream
+        btnS.setOnClickListener {
+            val b:Bitmap=Screenshot.takeScreenshotOfRootView(webView)
+            val mTessOCR=TessOCR(this,"spa")
+            doOCR(b,mTessOCR)
+            /*try{
+                fileOutputStream=FileOutputStream(fileScreenshot)
+                b.compress(Bitmap.CompressFormat.JPEG,100,fileOutputStream)
+                fileOutputStream.flush()
+                fileOutputStream.close()
+            }
+            catch(e:Exception)
+            {
+                e.printStackTrace()
+            }*/
+        }
         val settings =webView.settings
         settings.javaScriptEnabled=true
         webView.loadUrl(BASE_URL)
@@ -82,4 +112,28 @@ class Navegador : AppCompatActivity() {
             super.onBackPressed()
         }
     }
+    companion object Screenshot{
+        private fun takeScreenshot(view: View):Bitmap{
+            view.isDrawingCacheEnabled=true
+            view.buildDrawingCache(true)
+            val b=Bitmap.createBitmap(view.drawingCache)
+            view.isDrawingCacheEnabled=true
+            return b
+        }
+        fun takeScreenshotOfRootView(v:View):Bitmap{
+            return takeScreenshot(v.rootView)
+        }
+    }
+    fun doOCR(bitmap: Bitmap,mTessOCR:TessOCR)
+    {
+        val thread = Thread(Runnable{
+            val srcText=mTessOCR.getOCRResult(bitmap)
+            if(srcText!=null && srcText != "")
+            {
+                Log.d("OCR:",srcText)
+            }
+            mTessOCR.onDestroy()
+        } ).start()
+    }
+
 }
