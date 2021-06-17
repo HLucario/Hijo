@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -57,6 +56,8 @@ class Seleccion : AppCompatActivity() {
 
                                                 Toast.makeText(applicationContext,response.body().toString(),Toast.LENGTH_LONG).show()
                                                 val intent = Intent(this@Seleccion,Navegador::class.java)
+                                                intent.putExtra("hijo_id",hijo.id)
+                                                intent.putExtra("email",hijo.tutor_email)
                                                 startActivity(intent)
                                             }
                                             else {

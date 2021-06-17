@@ -1,24 +1,29 @@
 package com.example.hijo
 
+import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.webkit.*
 import android.widget.Button
 import android.widget.SearchView
+import android.widget.Toast
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.googlecode.tesseract.android.TessBaseAPI
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
 import java.util.*
 
 class Navegador : AppCompatActivity() {
     private val BASE_URL="https://google.com"
     private val SEARCH_PATH = "/search?q="
+    private var bitmap:Bitmap? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navegador)
@@ -52,7 +57,6 @@ class Navegador : AppCompatActivity() {
 
         })
         webView.webChromeClient =object : WebChromeClient(){
-
         }
         webView.webViewClient=object: WebViewClient(){
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -75,32 +79,16 @@ class Navegador : AppCompatActivity() {
 
         }
         val btnS=findViewById<Button>(R.id.btnS)
-        //val filePath=Environment.getExternalStorageDirectory().toString()+"/Download/"+Calendar.getInstance().time.toString()+".jpg"
-
-        //val fileScreenshot=File(filePath)
-        //Log.d("RUTA:",fileScreenshot.toString())
-        //lateinit var fileOutputStream: FileOutputStream
         btnS.setOnClickListener {
-            val b:Bitmap=Screenshot.takeScreenshotOfRootView(webView)
-            val mTessOCR=TessOCR(this,"spa")
-            doOCR(b,mTessOCR)
-            /*try{
-                fileOutputStream=FileOutputStream(fileScreenshot)
-                b.compress(Bitmap.CompressFormat.JPEG,100,fileOutputStream)
-                fileOutputStream.flush()
-                fileOutputStream.close()
-            }
-            catch(e:Exception)
-            {
-                e.printStackTrace()
-            }*/
+            bitmap=Screenshot.takeScreenshotOfRootView(webView)
+            ConvertTask().execute(bitmap)
+
         }
         val settings =webView.settings
         settings.javaScriptEnabled=true
         webView.loadUrl(BASE_URL)
 
     }
-
     override fun onBackPressed() {
         val webView = findViewById<WebView>(R.id.webView)
         if(webView.canGoBack())
@@ -124,16 +112,59 @@ class Navegador : AppCompatActivity() {
             return takeScreenshot(v.rootView)
         }
     }
-    fun doOCR(bitmap: Bitmap,mTessOCR:TessOCR)
+    private inner class ConvertTask: AsyncTask<Bitmap, Void, String>(){
+        internal var tesseract = TessBaseAPI()
+        override fun onPreExecute() {
+            super.onPreExecute()
+            val datapath="$filesDir/tesseract/"
+            FileUtil.checkFile(
+                this@Navegador,
+                datapath.toString(),
+                File(datapath + "tessdata/")
+            )
+            tesseract.init(datapath,"spa")
+        }
+
+        override fun doInBackground(vararg files:Bitmap): String {
+            val options= BitmapFactory.Options()
+            options.inSampleSize=4
+            tesseract.setImage(bitmap)
+            val result=tesseract.utF8Text
+            tesseract.end()
+            return result
+        }
+
+        override fun onPostExecute(result: String?){
+            super.onPostExecute(result)
+            Log.d("TEXT:",result!!)
+        }
+    }
+    private fun analisisTexto(text:String)
     {
-        val thread = Thread(Runnable{
-            val srcText=mTessOCR.getOCRResult(bitmap)
-            if(srcText!=null && srcText != "")
-            {
-                Log.d("OCR:",srcText)
-            }
-            mTessOCR.onDestroy()
-        } ).start()
+        RetrofitClient.instance.analizarTexto(text).enqueue(object : Callback<LoginResponse> {
+                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>)
+                {
+                    if (response.code() == 200)
+                    {
+                        val defaultResponse = response.body()!!
+                        val intent = Intent(this@Navegador, Seleccion::class.java)
+                        intent.putExtra("email", defaultResponse.email)
+                        intent.putExtra("nombre", defaultResponse.nombre)
+                        intent.putExtra("ap_pat", defaultResponse.ap_pat)
+                        intent.putExtra("ap_Mat", defaultResponse.ap_Mat)
+                        intent.putExtra("edad", defaultResponse.edad)
+                        startActivity(intent)
+                    }
+                    else {
+
+                        val message = response.errorBody()!!.string()
+                        Log.d("NO ENTRÓ",message)
+                    }
+                }
+                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                    Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
+                }
+            })
     }
 
 }
