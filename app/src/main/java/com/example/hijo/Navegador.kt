@@ -25,6 +25,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.Socket
 import java.net.URLEncoder
 import java.util.*
 
@@ -91,13 +92,18 @@ class Navegador : AppCompatActivity() {
         }
         val btnS=findViewById<Button>(R.id.btnS)
         btnS.setOnClickListener {
-            bitmap=Screenshot.takeScreenshotOfRootView(webView)
-            ConvertTask().execute(bitmap).toString()
+            tareaPrincipal(webView)
         }
         val settings =webView.settings
         settings.javaScriptEnabled=true
         webView.loadUrl(BASE_URL)
 
+    }
+    private fun tareaPrincipal(webView:WebView)
+    {
+        bitmap=null
+        bitmap=Screenshot.takeScreenshotOfRootView(webView)
+        ConvertTask().execute(bitmap)
     }
     override fun onBackPressed() {
         val webView = findViewById<WebView>(R.id.webView)
@@ -156,29 +162,42 @@ class Navegador : AppCompatActivity() {
     }
     private fun analisisTexto(text:String)
     {
-        CoroutineScope(Dispatchers.IO).launch {
-            withTimeout(120000)
+
+        RetrofitClient.instance.analizarTexto(text,hijoid,email)
+            .enqueue(object : Callback<ResponseBody> {
+
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>)
             {
-                RetrofitClient.instance.analizarTexto(text,hijoid,email).enqueue(object : Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>)
+                Log.d("CODE: ",response.code().toString())
+                Log.d("MESSAGE: ",response.message().toString())
+                Log.d("BODY: ",response.body()!!.string())
+                Log.d("CONTENIDO",response.toString())
+                if(response.code()==200)
+                {
+                    val respuesta=response.body()!!.string()
+                    if(respuesta=="Sin coincidencia")
                     {
-                        if(response.code()==200)
-                        {
-                            Log.d("RESULT",response.message())
-                        }
-                        else
-                        {
-                            val message = response.errorBody()!!.string()
-                            Log.d("NO ENTRÓ",message)
-                        }
+                        /*bitmap=Screenshot.takeScreenshotOfRootView(webView)
+                        ConvertTask().execute(bitmap).toString()*/
                     }
-                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        Log.d("ENTRA: ",t.message.toString())
-                        Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
+                    else
+                    {
+                        val ids=response.body()!!.string()
+                        val id=ids.toInt()
+                        enviaImagen(id)
                     }
-                })
+                }
+                else
+                {
+                    val message = response.errorBody()!!.string()
+                    Log.d("NO ENTRÓ",message)
+                }
             }
-        }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.d("ENTRA: ",t.message.toString())
+                Log.d("ENTRA2: ",t.cause.toString())
+            }
+        })
     }
     private fun enviaImagen(id:Int)
     {
