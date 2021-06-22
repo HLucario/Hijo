@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.webkit.*
@@ -14,23 +15,32 @@ import android.widget.SearchView
 import android.widget.Toast
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.googlecode.tesseract.android.TessBaseAPI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.URLEncoder
 import java.util.*
 
 class Navegador : AppCompatActivity() {
     private val BASE_URL="https://google.com"
     private val SEARCH_PATH = "/search?q="
-    private var bitmap:Bitmap? = null
+    private var hijoid:Int=0
+    private var email:String=""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navegador)
         val webView = findViewById<WebView>(R.id.webView)
         val searchView=findViewById<SearchView>(R.id.searchView)
         val swipeRefresh=findViewById<SwipeRefreshLayout>(R.id.swipeRefresh)
-
+        hijoid=intent.getIntExtra("hijo_id",0)
+        email=intent.getStringExtra("email").toString()
         swipeRefresh.setOnRefreshListener {
             webView.reload()
         }
@@ -80,9 +90,8 @@ class Navegador : AppCompatActivity() {
         }
         val btnS=findViewById<Button>(R.id.btnS)
         btnS.setOnClickListener {
-            bitmap=Screenshot.takeScreenshotOfRootView(webView)
-            ConvertTask().execute(bitmap)
-
+            val bitmap=Screenshot.takeScreenshotOfRootView(webView)
+            ConvertTask().execute(bitmap).toString()
         }
         val settings =webView.settings
         settings.javaScriptEnabled=true
@@ -128,43 +137,74 @@ class Navegador : AppCompatActivity() {
         override fun doInBackground(vararg files:Bitmap): String {
             val options= BitmapFactory.Options()
             options.inSampleSize=4
-            tesseract.setImage(bitmap)
-            val result=tesseract.utF8Text
+            tesseract.setImage(files)
+            var result=""
+            result=tesseract.utF8Text
             tesseract.end()
             return result
         }
 
         override fun onPostExecute(result: String?){
             super.onPostExecute(result)
-            Log.d("TEXT:",result!!)
+            val mresult=result!!.lowercase()
+            val ENCODED_REF=URLEncoder.encode(mresult,"utf-8")
+            val fresult=ENCODED_REF.replace("|","%7C",ignoreCase = true)
+            Log.d("MENSAJE",fresult)
+            analisisTexto(fresult)
         }
     }
     private fun analisisTexto(text:String)
     {
-        RetrofitClient.instance.analizarTexto(text).enqueue(object : Callback<LoginResponse> {
-                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>)
-                {
-                    if (response.code() == 200)
+        CoroutineScope(Dispatchers.IO).launch {
+            withTimeout(120000)
+            {
+                RetrofitClient.instance.analizarTexto(text,hijoid,email).enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>)
                     {
-                        val defaultResponse = response.body()!!
-                        val intent = Intent(this@Navegador, Seleccion::class.java)
-                        intent.putExtra("email", defaultResponse.email)
-                        intent.putExtra("nombre", defaultResponse.nombre)
-                        intent.putExtra("ap_pat", defaultResponse.ap_pat)
-                        intent.putExtra("ap_Mat", defaultResponse.ap_Mat)
-                        intent.putExtra("edad", defaultResponse.edad)
-                        startActivity(intent)
+                        if(response.code()==200)
+                        {
+                            Log.d("RESULT",response.message())
+                        }
+                        else
+                        {
+                            val message = response.errorBody()!!.string()
+                            Log.d("NO ENTRÓ",message)
+                        }
                     }
-                    else {
-
-                        val message = response.errorBody()!!.string()
-                        Log.d("NO ENTRÓ",message)
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.d("ENTRA: ",t.message.toString())
+                        Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
                     }
-                }
-                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                    Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
-                }
-            })
+                })
+            }
+        }
     }
+    private fun enviaImagen(id:Int)
+    {
+        val imgalerta=codificaImagen()
+        val fecha=Date()
+        val captura:CapturaNetwork=Captura(hijoid,fecha,imgalerta,id).asNetwork()
+        RetrofitClient.instance.insertaCaptura(captura).enqueue(object:Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>)
+            {
+                if(response.code()==200)
+                {
 
+                }
+
+            }
+            override fun onFailure(call: Call<ResponseBody>,t:Throwable)
+            {
+                Toast.makeText(applicationContext,t.message,Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+    private fun codificaImagen(bitmap:Bitmap):String
+    {
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos)
+        val b = baos.toByteArray()
+        val imgString=Base64.encodeToString(b,Base64.DEFAULT)
+        return imgString
+    }
 }

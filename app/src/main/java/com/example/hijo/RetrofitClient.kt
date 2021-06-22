@@ -4,6 +4,7 @@ import android.util.Base64
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient
 {
@@ -11,6 +12,9 @@ object RetrofitClient
     private const val BASE_URL="http://40.119.56.244:8080/ControlParental/rest/svc/"
 
     private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(2,TimeUnit.MINUTES)
+        .writeTimeout(2,TimeUnit.MINUTES)
+        .readTimeout(2,TimeUnit.MINUTES)
         .addInterceptor{ chain->
             val original = chain.request()
 
@@ -20,6 +24,7 @@ object RetrofitClient
 
             val request = requestBuilder.build()
             chain.proceed(request)
+
         }.build()
     val instance: APIService by lazy{
         val retrofit = Retrofit.Builder()

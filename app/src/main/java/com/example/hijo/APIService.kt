@@ -13,6 +13,8 @@ interface APIService
     fun listarHijos(@Query("email")email:String):Call <List<HijoResponse>>
     @POST("actualizaHijo")
     fun actualizaHijo(@Body hijo:HijoNetwork): Call<ResponseBody>
-    @POST("/analizarTexto")
-    fun analizarTexto(@Query("texto")texto:String,@Query("hijo_id")hijo_id:Int,@Query("email")email:String)
+    @POST("analizarTexto")
+    fun analizarTexto(@Query("texto")texto:String,@Query("hijo_id")hijoid:Int,@Query("email")email:String):Call <ResponseBody>
+    @POST("insertaCaptura")
+    fun insertaCaptura(@Body captura:CapturaNetwork):Call<ResponseBody>
 }
