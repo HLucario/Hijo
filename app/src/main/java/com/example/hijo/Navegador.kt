@@ -33,6 +33,7 @@ class Navegador : AppCompatActivity() {
     private val SEARCH_PATH = "/search?q="
     private var hijoid:Int=0
     private var email:String=""
+    private var bitmap:Bitmap?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navegador)
@@ -90,7 +91,7 @@ class Navegador : AppCompatActivity() {
         }
         val btnS=findViewById<Button>(R.id.btnS)
         btnS.setOnClickListener {
-            val bitmap=Screenshot.takeScreenshotOfRootView(webView)
+            bitmap=Screenshot.takeScreenshotOfRootView(webView)
             ConvertTask().execute(bitmap).toString()
         }
         val settings =webView.settings
@@ -137,7 +138,7 @@ class Navegador : AppCompatActivity() {
         override fun doInBackground(vararg files:Bitmap): String {
             val options= BitmapFactory.Options()
             options.inSampleSize=4
-            tesseract.setImage(files)
+            tesseract.setImage(bitmap)
             var result=""
             result=tesseract.utF8Text
             tesseract.end()
@@ -199,10 +200,10 @@ class Navegador : AppCompatActivity() {
             }
         })
     }
-    private fun codificaImagen(bitmap:Bitmap):String
+    private fun codificaImagen():String
     {
         val baos = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG,100,baos)
+        bitmap!!.compress(Bitmap.CompressFormat.JPEG,100,baos)
         val b = baos.toByteArray()
         val imgString=Base64.encodeToString(b,Base64.DEFAULT)
         return imgString
