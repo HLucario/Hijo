@@ -7,7 +7,7 @@ data class CapturaNetwork(
     @SerializedName("id")
     val id: Int,
     @SerializedName("fecha")
-    val fecha: Date,
+    val fecha: String,
     @SerializedName("img")
     val img: String,
     @SerializedName("alerta_id")
