@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--Tema de la SegundaActivity-->
+    <style name="ThemeApp" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/purple_700</item>
+        <item name="colorPrimaryDark">@color/purple_500</item> <!--Color naranja-->
+        <item name="colorAccent">@color/purple_200</item>
+    </style>
+
+</resources>

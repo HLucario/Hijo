@@ -1,7 +1,6 @@
 package com.example.hijo
 
 import com.google.gson.annotations.SerializedName
-import java.util.*
 
 data class CapturaNetwork(
     @SerializedName("id")

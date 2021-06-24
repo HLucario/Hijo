@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     android:gravity="center|center_horizontal|center_vertical"
     android:orientation="vertical"
-    tools:context=".Seleccion">
+    tools:context=".Seleccion"
+    android:background="@color/white"
+    >
 
     <TextView
         android:id="@+id/textView4"
@@ -15,12 +17,15 @@
         android:fontFamily="@font/goblin_one"
         android:text="@string/e_selección"
         android:textSize="24sp"
-        android:textAlignment="center"/>
+        android:textAlignment="center"
+        android:textColor="@color/black"/>
 
     <Spinner
         android:id="@+id/mSpinner"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </Spinner>
+        android:layout_height="wrap_content"
+        android:dropDownSelector="@color/black"
+        android:textColor="@color/white"
+        android:background="@color/black"></Spinner>
 
 </LinearLayout>

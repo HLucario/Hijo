@@ -1,4 +1,4 @@
-    package com.example.hijo
+package com.example.hijo
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +10,7 @@ import android.widget.Toast
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,12 +31,13 @@ class MainActivity : AppCompatActivity() {
                 editContra.requestFocus()
                 return@setOnClickListener
             }
-            RetrofitClient.instance.Login(correo,password)
+            RetrofitClient.instance.Login(correo, password)
                 .enqueue(object : Callback<LoginResponse> {
-                    override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>)
-                    {
-                        if (response.code() == 200)
-                        {
+                    override fun onResponse(
+                        call: Call<LoginResponse>,
+                        response: Response<LoginResponse>
+                    ) {
+                        if (response.code() == 200) {
                             val defaultResponse = response.body()!!
                             val intent = Intent(this@MainActivity, Seleccion::class.java)
                             intent.putExtra("email", defaultResponse.email)
@@ -44,13 +46,13 @@ class MainActivity : AppCompatActivity() {
                             intent.putExtra("ap_Mat", defaultResponse.ap_Mat)
                             intent.putExtra("edad", defaultResponse.edad)
                             startActivity(intent)
-                        }
-                        else {
+                        } else {
 
                             val message = response.errorBody()!!.string()
-                            Log.d("NO ENTRÓ",message)
+                            Log.d("NO ENTRÓ", message)
                         }
                     }
+
                     override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                         Toast.makeText(applicationContext, t.message, Toast.LENGTH_LONG).show()
                     }
