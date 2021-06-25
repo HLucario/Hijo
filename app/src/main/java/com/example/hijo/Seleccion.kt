@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -54,13 +55,13 @@ class Seleccion : AppCompatActivity() {
                                 if (position > 0) {
                                     val modelo = Build.MODEL
                                     val hijo: HijoNetwork = Hijo(
-                                        hijosR[position].id,
-                                        hijosR[position].nombre,
-                                        hijosR[position].ap_pat,
-                                        hijosR[position].ap_Mat,
-                                        hijosR[position].edad,
+                                        hijosR[position-1].id,
+                                        hijosR[position-1].nombre,
+                                        hijosR[position-1].ap_pat,
+                                        hijosR[position-1].ap_Mat,
+                                        hijosR[position-1].edad,
                                         modelo,
-                                        hijosR[position].tutor_email
+                                        hijosR[position-1].tutor_email
                                     ).asNetwork()
                                     RetrofitClient.instance.actualizaHijo(hijo)
                                         .enqueue(object : Callback<ResponseBody> {
@@ -78,6 +79,8 @@ class Seleccion : AppCompatActivity() {
                                                         this@Seleccion,
                                                         Navegador::class.java
                                                     )
+                                                    Log.d("ID:",hijo.id.toString())
+                                                    Log.d("NOMBRE:",hijo.nombre)
                                                     intent.putExtra("hijo_id", hijo.id)
                                                     intent.putExtra("email", hijo.tutor_email)
                                                     startActivity(intent)

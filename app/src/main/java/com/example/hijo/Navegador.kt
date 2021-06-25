@@ -86,12 +86,10 @@ class Navegador : AppCompatActivity() {
                 if (evento == 0) {
                     tareaPrincipal(webView)
                     evento = 1
-                    Log.d("EVENTO 1:", evento.toString())
                 } else {
                     if (evento == 1) {
                         tareaPrincipal(webView)
                         evento = 2
-                        Log.d("EVENTO 2:", evento.toString())
                     }
                 }
             }
@@ -113,7 +111,6 @@ class Navegador : AppCompatActivity() {
         var text:String?
         bitmap = Screenshot.takeScreenshotOfRootView(webView)
         text = extraerTexto(bitmap)
-        Log.d("TEXTO: ", text)
         analisisTexto(text, webView, bitmap)
     }
 
@@ -158,6 +155,16 @@ class Navegador : AppCompatActivity() {
             tesseract.end()
             val mresult = result!!.lowercase()
             fresult = mresult.replace("|", "%7C", ignoreCase = true)
+            fresult = fresult.replace("[", "%5B", ignoreCase = true)
+            fresult = fresult.replace("]", "%5D", ignoreCase = true)
+            fresult = fresult.replace("{", "%7B", ignoreCase = true)
+            fresult = fresult.replace("}", "%7D", ignoreCase = true)
+            fresult = fresult.replace("^", "%5E", ignoreCase = true)
+            fresult = fresult.replace("\\", "%5C", ignoreCase = true)
+            fresult = fresult.replace("`", "%60", ignoreCase = true)
+            fresult = fresult.replace("\"", "%22", ignoreCase = true)
+            fresult = fresult.replace("<", "%3C", ignoreCase = true)
+            fresult = fresult.replace(">", "%3E", ignoreCase = true)
         }
         return fresult
     }
@@ -200,15 +207,10 @@ class Navegador : AppCompatActivity() {
         val formatter = DateTimeFormatter.ofPattern("LLL dd, YYYY, HH:mm:ss a")
         val fecha = current.format(formatter)
         Log.d("FECHA:", fecha)
-        Log.d("HIJO_ID", hijoid.toString())
-        Log.d("IMGALERTA", imgalerta)
         Log.d("ID", id.toString())
         val captura: CapturaNetwork = Captura(hijoid, fecha, imgalerta, id).asNetwork()
         RetrofitClient.instance.insertaCaptura(captura).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                //Log.d("BODY:",response.body()!!.string())
-                Log.d("CODE:", response.code().toString())
-                Log.d("MESSAGE:", response.message())
                 if (response.code() == 200) {
                     Log.d("Body", response.body()!!.string())
                 } else {
