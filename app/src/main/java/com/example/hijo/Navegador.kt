@@ -24,7 +24,10 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.lang.NumberFormatException
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 
 class Navegador : AppCompatActivity() {
@@ -203,10 +206,11 @@ class Navegador : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun enviaImagen(id: Int, imgalerta: String) {
-        val current = LocalDateTime.now()
-        val formatter = DateTimeFormatter.ofPattern("LLL dd, YYYY, HH:mm:ss a")
-        val fecha = current.format(formatter)
-        Log.d("FECHA:", fecha)
+        /*val current = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("Mexico/General"))
+        val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+        val fecha = current.format(formatter)*/
+        val fecha=Date(System.currentTimeMillis())
+        Log.d("FECHA:", fecha.toString())
         Log.d("ID", id.toString())
         val captura: CapturaNetwork = Captura(hijoid, fecha, imgalerta, id).asNetwork()
         RetrofitClient.instance.insertaCaptura(captura).enqueue(object : Callback<ResponseBody> {
