@@ -15,9 +15,9 @@
         android:theme="@style/ThemeApp"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true">
-        <activity android:name=".Navegador"></activity>
-        <activity android:name=".Seleccion" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.Navegador"></activity>
+        <activity android:name=".ui.Seleccion" />
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
